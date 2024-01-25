@@ -29,11 +29,27 @@ def add_product():
 
         # Cadastrando produto no banco
         db.session.add(product)
-        db.session.commit()
+        db.session.commit() # para aplicar nossas alterações me nossa base de dados
         
         return jsonify({ 'message': 'Product added successfully' })
 
     return jsonify({ 'message': 'Invalid product data' }), 400
+
+
+@app.route('/api/products/delete/<int:product_id>', methods=["DELETE"])
+def delete_product(product_id):
+    # [x] Recuperar produto da base de dados
+    # [x] Verificar se o produto existe
+    # [x] Se existe, apagar da base de dados
+    # [x] Se não existe, retornar 404 Not Found
+    product = Product.query.get(product_id)
+
+    if product:
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({ 'message': 'Product deleted successfully' })
+    
+    return jsonify({ 'message': 'Product not found'}), 404
 
 
 # Criando uma rota raiz (página inicial) e função que será executado ao usuário fazer a requisição para essa rota
