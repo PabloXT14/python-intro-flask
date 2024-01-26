@@ -66,6 +66,7 @@ def get_product_details(product_id):
 
     return jsonify({ 'message': 'Product not found' }), 404
 
+
 @app.route('/api/products/update/<int:product_id>', methods=["PUT"])
 def update_product(product_id):
     product = Product.query.get(product_id)
@@ -88,6 +89,24 @@ def update_product(product_id):
     
     return jsonify({ 'message': 'Product updated successfully' })
 
+
+@app.route('/api/products', methods=["GET"])
+def get_products():
+    products = Product.query.all()
+
+    product_list = []
+
+    for product in products:
+        # Os detalhes do produto podem ser acessador na rota de detalhes de um produto
+        product_data = {
+            'id': product.id,
+            'name': product.name,
+            'price': product.price,
+        }
+
+        product_list.append(product_data)
+
+    return jsonify(product_list)
 
 # Criando uma rota raiz (página inicial) e função que será executado ao usuário fazer a requisição para essa rota
 @app.route('/')
