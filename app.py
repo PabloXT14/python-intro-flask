@@ -2,16 +2,22 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_login import UserMixin
+from flask_login import UserMixin, login_user, LoginManager
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'eyJhbGciOiJIUzI1NiJ9'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
 
+login_manager = LoginManager()
+
 # Database Config
 db = SQLAlchemy(app)
-CORS(app)
 
+login_manager.init_app(app)
+login_manager.login_view = 'login' # nome da nossa rota de login
+
+CORS(app)
 
 # Modelagem (modelando o formato que os nosso dados terá para ir para o banco de dados)
 '''
@@ -46,6 +52,25 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=True)
 
+# Authentication Routes
+@app.route('/login', methods=["POST"])
+def login():
+    data = request.json
+
+    if ('username' not in data) or ('password' not in data):
+        return jsonify({ 'message': 'Invalid user data' }), 404
+    
+    user = User.query.filter_by(username=data['username']).first()
+
+    if not user:
+        return jsonify({ 'message': 'Unauthorized. Invalid credentials' }), 401
+    
+    if data.get('password') != user.password:
+        return jsonify({ 'message': 'Unauthorized. Invalid credentials' }), 401
+
+    login_user(user)
+
+    return jsonify({ 'message': 'Logged in successfully' })
 
 # Product Routes
 @app.route('/api/products/add', methods=["POST"])
