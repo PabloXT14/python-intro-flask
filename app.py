@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eyJhbGciOiJIUzI1NiJ9'
@@ -186,10 +186,24 @@ def get_products():
 
     return jsonify(product_list)
 
-# Criando uma rota raiz (página inicial) e função que será executado ao usuário fazer a requisição para essa rota
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
+# Cart Routes
+@app.route('/api/cart/add/<int:product_id>', methods=["POST"])
+@login_required
+def add_to_cart(product_id):
+    # Verificando se usuário e produto existem
+    user = User.query.get(int(current_user.id))
+    product = Product.query.get(product_id)
+
+    if user and product:
+        cart_item = CartItem(user_id=user.id, product_id=product.id)
+
+        db.session.add(cart_item)
+        db.session.commit()
+
+        return jsonify({ 'message': 'Item added to the cart successfully' })
+
+    return jsonify({ 'message': 'Failed to add item to the cart' }), 400
+
 
 # Executando aplicação
 if __name__ == '__main__':
