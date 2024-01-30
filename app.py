@@ -218,6 +218,34 @@ def remove_from_cart(product_id):
 
     return jsonify({ 'message': 'Failed to remove item from the cart' }), 400
 
+
+@app.route('/api/cart/', methods=["GET"])
+@login_required
+def view_cart():
+    user = User.query.get(current_user.id)
+
+    if user:
+        cart_items = user.cart
+
+        cart_items_list = []
+
+        for item in cart_items:
+            product = Product.query.get(item.product_id)
+
+            item_data = {
+                'id': item.id,
+                'user_id': item.user_id,
+                'product_id': item.product_id,
+                'product_name': product.name,
+                'product_price': product.price
+            }
+
+            cart_items_list.append(item_data)
+        
+        return jsonify(cart_items_list)
+
+    return jsonify({ 'message': 'Unauthorized. User not logged in' })
+
 # Executando aplicação
 if __name__ == '__main__':
     app.run(debug=True, port=3000)
