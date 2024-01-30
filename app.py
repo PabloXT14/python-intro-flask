@@ -222,29 +222,39 @@ def remove_from_cart(product_id):
 @app.route('/api/cart/', methods=["GET"])
 @login_required
 def view_cart():
-    user = User.query.get(current_user.id)
+    user = User.query.get(int(current_user.id))
+    cart_items = user.cart
 
-    if user:
-        cart_items = user.cart
+    cart_items_list = []
 
-        cart_items_list = []
+    for item in cart_items:
+        product = Product.query.get(item.product_id)
 
-        for item in cart_items:
-            product = Product.query.get(item.product_id)
+        item_data = {
+            'id': item.id,
+            'user_id': item.user_id,
+            'product_id': item.product_id,
+            'product_name': product.name,
+            'product_price': product.price
+        }
 
-            item_data = {
-                'id': item.id,
-                'user_id': item.user_id,
-                'product_id': item.product_id,
-                'product_name': product.name,
-                'product_price': product.price
-            }
-
-            cart_items_list.append(item_data)
+        cart_items_list.append(item_data)
         
-        return jsonify(cart_items_list)
+    return jsonify(cart_items_list)
 
-    return jsonify({ 'message': 'Unauthorized. User not logged in' })
+
+@app.route('/api/cart/checkout', methods=["POST"])
+@login_required
+def checkout():
+    user = User.query.get(int(current_user.id))
+    cart_items = user.cart
+
+    for item in cart_items:
+        db.session.delete(item)
+    
+    db.session.commit()
+    
+    return jsonify({ 'message': 'Checkout successful. Cart has been cleared' })
 
 # Executando aplicação
 if __name__ == '__main__':
